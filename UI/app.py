@@ -1,38 +1,94 @@
-from flask import Flask, render_template
-from flask import Flask, jsonify, request
-from service import predict_recommendation, weather_predictions
-from service import crop_model as model 
+# from flask import Flask, render_template
+# from flask import Flask, jsonify, request
+# from service import serve_recomm_requests
+# app = Flask(__name__)
+
+# @app.route('/')
+# def index():
+#     return render_template('index.html')
+
+# # Route to update a book by ID
+# @app.route('/recommendation', methods=['POST'])
+# def get_recommendation():
+#     county = request.form.get('countySelect')
+#     month = request.form.get('monthSelect')
+#     predictions_and_recomm = serve_recomm_requests(month, county)
+
+#     # Extracting the values
+#     weather = predictions_and_recomm['weather']
+#     recommendations = predictions_and_recomm['recommendations']
+#     predicted_rainfall = round(weather[0][-1], 2)  # Extracting the last value which represents rainfall
+    
+#     context = {'recommendations': recommendations, 'predicted_rainfall': predicted_rainfall}
+
+#     return render_template('index.html', county=county, month=month, recommendations=recommendations,predicted_rainfall=predicted_rainfall)
+
+# if __name__== '__main__':
+#     app.run(debug=True)
+
+
+from flask import Flask, render_template, request, redirect, session
+from service import serve_recomm_requests
+
 app = Flask(__name__)
+app.secret_key = "your_secret_key_here"  # Change this to a random secret key
 
-# Sample data
-books = [
-    {"id": 1, "title": "The Great Gatsby", "author": "F. Scott Fitzgerald"},
-    {"id": 2, "title": "To Kill a Mockingbird", "author": "Harper Lee"},
-    {"id": 3, "title": "1984", "author": "George Orwell"}
-]
+# Dummy user data (for demonstration purposes)
+users = {'username': 'password'}  # Replace with actual user data from your database
+
 @app.route('/')
-def index():
-    return render_template('index.html')
+def signup_form():
+    return render_template('signup.html')
 
-# Route to get all books
-@app.route('/weather', methods=['GET'])
-def get_books():
-    return jsonify({'books': books})
-
-
-# Route to update a book by ID
 @app.route('/recommendation', methods=['POST'])
 def get_recommendation():
     county = request.form.get('countySelect')
     month = request.form.get('monthSelect')
-    recommendations = predict_recommendation(weather_predictions,model)
+    predictions_and_recomm = serve_recomm_requests(month, county)
 
-    print(recommendations)
-
-    formatted = jsonify ({'Crops Recommended': recommendations.tolist()})
+    # Extracting the values
+    weather = predictions_and_recomm['weather']
+    recommendations = predictions_and_recomm['recommendations']
+    predicted_rainfall = weather[0][-1]  # Extracting the last value which represents rainfall
     
-    return render_template('index.html', recommended= formatted)
+    return render_template('index.html', county=county, month=month, recommendations=recommendations, predicted_rainfall=predicted_rainfall)
+
+# Login form route
+@app.route('/login')
+def login_form():
+    return render_template('login.html')
+
+# Login route
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.form['username']
+    password = request.form['password']
+    
+    if username in users and users[username] == password:
+        session['username'] = username
+        # Render index.html after successful login
+        return render_template('index.html')
+    else:
+        return 'Invalid username or password'
+
+# Sign-up route
+@app.route('/signup', methods=['POST'])
+def signup():
+    username = request.form['username']
+    password = request.form['password']
+    
+    # Add the user to the database or any other storage mechanism
+    users[username] = password
+    
+    # Redirect to login page after successful sign-up
+    return redirect('/login')
+
+# Logout route
+@app.route('/logout')
+def logout():
+    session.pop('username', None)
+    return redirect('/login')
 
 if __name__ == '__main__':
     app.run(debug=True)
-
+     

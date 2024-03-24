@@ -1,41 +1,43 @@
-# load the model from disk
-import pickle
+from recommendation_service import predict_recommendation
+from weather_service import get_predictions, construct_input_data
+import datetime
 import numpy as np
-weather_model_weight = "weatherModel/weather_model.pickle"
-crop_model_weight = "cropModel/crop_model.pickle"
-weather_model = pickle.load(open(weather_model_weight, 'rb'))
-crop_model = pickle.load(open(crop_model_weight, 'rb'))
+from models import generate
 
-# Function to predict rainfall in the future
-def predict_weather(model, base_index, base_year, num_months):
-    print("[+] Predicting weather")
-    predictions = []
 
-    for i in range(num_months):
-        future_index = base_index + i
-        future_year = base_year + (future_index // 12)
-        future_month = future_index % 12
 
-        future_data = np.array([[future_index, future_year]])
-        future_prediction = model.predict(future_data).reshape(-1)
-        predictions.append(future_prediction[future_month])
 
-    return np.array(predictions)
+def serve_recomm_requests(month, county):
+    month_mapping = {
+    "January": "JAN",
+    "February": "FEB",
+    "March": "MAR",
+    "April": "APR",
+    "May": "MAY",
+    "June": "JUN",
+    "July": "JUL",
+    "August": "AUG",
+    "September": "SEP",
+    "October": "OCT",
+    "November": "NOV",
+    "December": "DEC"
+    }
+    month = "December"
+    
+    if month in month_mapping:
+        month_abbrev = month_mapping[month]
+    else:
+        print("Invalid month name.")
 
-def predict_recommendation (weather,model):
-    print("[+] Predicting recommendations")
-    result = model.predict(weather)
 
-    return result
+    input_data = construct_input_data(month_abbrev, county)
+    # predictions = get_predictions(input_data).reshape(1, -1)
+    predictions = generate(input_data).reshape(1, -1)
+    
+    print("Predictios", predictions)
 
-# Predicting rainfall in future
-base_index = 100 #data.shape[0]  # Use the last index in the dataset
-base_year = 2023  # Use the last year in the dataset
-num_months = 3  # Predict 3 months into the future
+    recommendations = predict_recommendation(predictions)
+    
+    return {"weather": predictions, "recommendations": recommendations}
 
-weather_predictions = predict_weather(weather_model, base_index, base_year, num_months).reshape(1, -1)
-# print(f"The predictions for the next {num_months} months are:", predictions)
-
-recommendations = predict_recommendation(weather_predictions, crop_model)
-
-print(recommendations)
+print("[+] Recommendations from Servie", serve_recomm_requests("March", "BUNGOMA"))

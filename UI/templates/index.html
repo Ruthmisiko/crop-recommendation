@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% block head %} 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
 
 {% endblock %}
 
@@ -23,7 +24,6 @@
     <div class="left-content">
         <h2>Empowering You to Tackle Climate Change</h2>
         <p>Our innovative climate prediction and recommendation model helps you make informed decisions. Select your location and month to receive accurate rainfall predictions and sustainability recommendations.</p>
-        <button>Start Prediction</button>
     </div>
     <div class="right-content">
      
@@ -91,7 +91,7 @@
 
             <!-- <h3>Month</h3> -->
             <label for="month">Select Month:</label>
-            <select name="monthSelect" id="monthSelect">
+            <select value="{month}" name="monthSelect" id="monthSelect">
                 <option value="january">January</option>
                 <option value="february">February</option>
                 <option value="march">March</option>
@@ -119,13 +119,11 @@
         <div class="card">
             <h3>Crop Recommendation</h3>
             <ul>
-                {% for recommendation in recommended %}
-                <li>{{ recommendation}}</li>
-                {% endfor %}
+                <p style="color: white;">{{ recommendations }}</p>
             </ul>
         </div>
+       
     </div>
 </section>
-
 
 {% endblock %}
